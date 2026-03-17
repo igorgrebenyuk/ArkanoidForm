@@ -29,11 +29,57 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            pbPaddle = new PictureBox();
+            pbBall = new PictureBox();
+            gameTimer = new System.Windows.Forms.Timer(components);
+            ((System.ComponentModel.ISupportInitialize)pbPaddle).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pbBall).BeginInit();
+            SuspendLayout();
+            // 
+            // pbPaddle
+            // 
+            pbPaddle.BackColor = Color.Blue;
+            pbPaddle.Location = new Point(302, 529);
+            pbPaddle.Name = "pbPaddle";
+            pbPaddle.Size = new Size(150, 20);
+            pbPaddle.TabIndex = 0;
+            pbPaddle.TabStop = false;
+            // 
+            // pbBall
+            // 
+            pbBall.BackColor = Color.Red;
+            pbBall.Location = new Point(371, 503);
+            pbBall.Name = "pbBall";
+            pbBall.Size = new Size(20, 20);
+            pbBall.TabIndex = 1;
+            pbBall.TabStop = false;
+            // 
+            // gameTimer
+            // 
+            gameTimer.Enabled = true;
+            gameTimer.Interval = 20;
+            // 
+            // Form1
+            // 
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            BackColor = Color.Black;
+            ClientSize = new Size(784, 561);
+            Controls.Add(pbBall);
+            Controls.Add(pbPaddle);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
+            Name = "Form1";
             Text = "Form1";
+            ((System.ComponentModel.ISupportInitialize)pbPaddle).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pbBall).EndInit();
+            ResumeLayout(false);
         }
 
         #endregion
+
+        private PictureBox pbPaddle;
+        private PictureBox pbBall;
+        private System.Windows.Forms.Timer gameTimer;
     }
 }
