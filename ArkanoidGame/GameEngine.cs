@@ -2,29 +2,45 @@
 
 namespace ArkanoidGame
 {
+    /// <summary>
+    /// Логический движок игры. Отвечает за расчеты перемещений и состояние игровых объектов.
+    /// </summary>
     public class GameEngine
     {
+        /// <summary> Текущая скорость мяча по оси X. </summary>
         public int BallSpeedX { get; set; } = GameSettings.InitialSpeedX;
+
+        /// <summary> Текущая скорость мяча по оси Y. </summary>
         public int BallSpeedY { get; set; } = GameSettings.InitialSpeedY;
 
-        public int BallDamage { get; set; } = 1;
+        /// <summary> Количество урона, которое наносит мяч при ударе о блок. </summary>
+        public int BallDamage { get; set; } = GameSettings.InitialBallDamage;
 
-        public Point CalculateNewPosition(Point currentPos, Size ballSize, Size clientSize)
+        /// <summary>
+        /// Рассчитывает новую позицию мяча с учетом отскоков от границ окна.
+        /// </summary>
+        public Point CalculateNewPosition(Point currentPosition, Size ballSize, Size clientWindowSize)
         {
-            int nextX = currentPos.X + BallSpeedX;
-            int nextY = currentPos.Y + BallSpeedY;
+            int nextPositionX = currentPosition.X + BallSpeedX;
+            int nextPositionY = currentPosition.Y + BallSpeedY;
 
-            if (nextX <= 0 || nextX + ballSize.Width >= clientSize.Width) BallSpeedX *= -1;
-            if (nextY <= 0) BallSpeedY *= -1;
+            if (nextPositionX <= 0 || nextPositionX + ballSize.Width >= clientWindowSize.Width)
+                BallSpeedX *= -1;
 
-            return new Point(nextX, nextY);
+            if (nextPositionY <= 0)
+                BallSpeedY *= -1;
+
+            return new Point(nextPositionX, nextPositionY);
         }
 
+        /// <summary>
+        /// Вычисляет физику отскока мяча при попадании в ракетку.
+        /// </summary>
         public void HitPaddle(int ballCenterX, int paddleCenterX)
         {
             BallSpeedY *= -1;
-            int offset = ballCenterX - paddleCenterX;
-            BallSpeedX = offset / 15;
+            int offsetFromCenter = ballCenterX - paddleCenterX;
+            BallSpeedX = offsetFromCenter / 15;
         }
     }
 }
