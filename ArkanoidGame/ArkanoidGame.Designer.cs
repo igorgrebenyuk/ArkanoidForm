@@ -1,6 +1,6 @@
 ﻿namespace ArkanoidGame
 {
-    partial class ArkanoidGame : Form
+    partial class GameForm : Form
     {
         /// <summary>
         ///  Required designer variable.

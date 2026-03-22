@@ -1,172 +1,142 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace ArkanoidGame
 {
     /// <summary>
-    /// Главное окно игры Arkanoid. Управляет интерфейсом и игровым процессом.
+    /// Окно игры. Отвечает ТОЛЬКО за отрисовку (UI) и перехват ввода.
     /// </summary>
-    public partial class ArkanoidGame : Form
+    public partial class GameForm : Form
     {
         private readonly GameEngine engine;
-        private readonly List<PictureBox> blocks;
-        private readonly List<PictureBox> boosters;
-        private readonly Random randomizer;
+        private readonly Dictionary<Block, PictureBox> blockViews;
+        private readonly Dictionary<Booster, PictureBox> boosterViews;
 
-        /// <summary>
-        /// Инициализирует новый экземпляр класса ArkanoidGame и настраивает компоненты.
-        /// </summary>
-        public ArkanoidGame()
+        public GameForm()
         {
             InitializeComponent();
 
             engine = new GameEngine();
-            blocks = new();
-            boosters = new();
-            randomizer = new Random();
+            blockViews = new Dictionary<Block, PictureBox>();
+            boosterViews = new Dictionary<Booster, PictureBox>();
 
-            GenerateBlocks();
-            UpdateWindowText(); 
+            SyncUIWithEngine();
 
             gameTimer.Tick += GameTimer_Tick;
-            this.MouseMove += ArkanoidGame_MouseMove; 
+            this.MouseMove += GameForm_MouseMove;
         }
 
-        private void GenerateBlocks()
+        private void SyncUIWithEngine()
         {
-            for (int rowNumber = 0; rowNumber < GameSettings.Rows; rowNumber++)
+            foreach (var blockPictureBox in blockViews.Values)
             {
-                int healthLevel = GameSettings.Rows - rowNumber;
-
-                for (int colNumber = 0; colNumber < GameSettings.Columns; colNumber++)
-                {
-                    PictureBox block = new()
-                    {
-                        Size = new Size(GameSettings.BlockWidth, GameSettings.BlockHeight),
-                        Left = GameSettings.BlockLeftOffset + colNumber * (GameSettings.BlockWidth + GameSettings.BlockSpacing),
-                        Top = GameSettings.BlockTopOffset + rowNumber * (GameSettings.BlockHeight + GameSettings.BlockSpacing),
-                        BorderStyle = BorderStyle.FixedSingle,
-                        Tag = healthLevel,
-                        BackColor = GetBlockColor(healthLevel)
-                    };
-
-                    this.Controls.Add(block);
-                    blocks.Add(block);
-                }
+                this.Controls.Remove(blockPictureBox);
             }
+            foreach (var boosterPictureBox in boosterViews.Values)
+            {
+                this.Controls.Remove(boosterPictureBox);
+            }
+
+            blockViews.Clear();
+            boosterViews.Clear();
+
+            foreach (var block in engine.Blocks)
+            {
+                var blockPictureBox = new PictureBox
+                {
+                    Bounds = block.Bounds,
+                    BorderStyle = BorderStyle.FixedSingle,
+                    BackColor = GetBlockColor(block.Health)
+                };
+                this.Controls.Add(blockPictureBox);
+                blockViews.Add(block, blockPictureBox);
+            }
+
+            UpdateWindowText();
         }
 
         private static Color GetBlockColor(int healthPoints) => healthPoints switch
         {
-            GameSettings.MaxBlockHealth => Color.Purple,
-            GameSettings.HighHealth => Color.Red,
-            GameSettings.MediumHealth => Color.Orange,
-            GameSettings.LowHealth => Color.Yellow,
+            GameConstants.MaxBlockHealth => Color.Purple,
+            GameConstants.HighHealth => Color.Red,
+            GameConstants.MediumHealth => Color.Orange,
+            GameConstants.LowHealth => Color.Yellow,
             _ => Color.Green
         };
 
         private void UpdateWindowText()
         {
-            this.Text = $"ArkanoidGame | Урон мяча: {engine.BallDamage}";
+            this.Text = $"Arkanoid | Урон мяча: {engine.BallDamage}";
         }
 
-        private void ArkanoidGame_MouseMove(object sender, MouseEventArgs mouseEvent)
+        private void GameForm_MouseMove(object _, MouseEventArgs mouseEvent)
         {
-            int newPaddlePositionX = mouseEvent.X - pbPaddle.Width / 2;
-
-            if (newPaddlePositionX < 0)
-                newPaddlePositionX = 0;
-
-            if (newPaddlePositionX > this.ClientSize.Width - pbPaddle.Width)
-                newPaddlePositionX = this.ClientSize.Width - pbPaddle.Width;
-
-            pbPaddle.Left = newPaddlePositionX;
+            engine.MovePaddle(mouseEvent.X, this.ClientRectangle.Width);
+            pbPaddle.Location = engine.Paddle.Location; 
         }
 
-        private void GameTimer_Tick(object sender, EventArgs timerEvent)
+        private void GameTimer_Tick(object _, EventArgs __)
         {
-            pbBall.Location = engine.CalculateNewPosition(pbBall.Location, pbBall.Size, this.ClientSize);
+            engine.UpdatePhysics(this.ClientRectangle.Width, this.ClientRectangle.Height);
 
-            if (pbBall.Bounds.IntersectsWith(pbPaddle.Bounds) && engine.BallSpeedY > 0)
-            {
-                engine.HitPaddle(pbBall.Left + pbBall.Width / 2, pbPaddle.Left + pbPaddle.Width / 2);
-            }
+            pbBall.Location = engine.Ball.Location;
+            pbPaddle.Location = engine.Paddle.Location;
 
-            for (int blockIndex = blocks.Count - 1; blockIndex >= 0; blockIndex--)
+            foreach (var pair in blockViews.ToList())
             {
-                if (pbBall.Bounds.IntersectsWith(blocks[blockIndex].Bounds))
+                var logicalBlock = pair.Key;
+                var pictureBoxView = pair.Value;
+
+                if (!engine.Blocks.Contains(logicalBlock))
                 {
-                    engine.BallSpeedY *= -1;
-                    int currentHealth = (int)blocks[blockIndex].Tag;
-                    currentHealth -= engine.BallDamage;
-
-                    if (currentHealth <= 0)
-                    {
-                        TryDropBooster(blocks[blockIndex].Location);
-                        this.Controls.Remove(blocks[blockIndex]);
-                        blocks.RemoveAt(blockIndex);
-                    }
-                    else
-                    {
-                        blocks[blockIndex].Tag = currentHealth;
-                        blocks[blockIndex].BackColor = GetBlockColor(currentHealth);
-                    }
-                    break;
+                    this.Controls.Remove(pictureBoxView);
+                    blockViews.Remove(logicalBlock);
+                }
+                else
+                {
+                    pictureBoxView.BackColor = GetBlockColor(logicalBlock.Health);
                 }
             }
 
-            ProcessFallingBoosters();
+            foreach (var booster in engine.Boosters)
+            {
+                if (!boosterViews.ContainsKey(booster))
+                {
+                    var boosterPictureBox = new PictureBox
+                    {
+                        Bounds = booster.Bounds,
+                        BackColor = FormConstants.BoosterColor,
+                        BorderStyle = FormConstants.BoosterBorderStyle
+                    };
+                    this.Controls.Add(boosterPictureBox);
+                    boosterViews.Add(booster, boosterPictureBox);
+                }
+                else
+                {
+                    boosterViews[booster].Location = booster.Bounds.Location;
+                }
+            }
 
-            if (pbBall.Top > this.ClientSize.Height)
+            foreach (var pair in boosterViews.ToList())
+            {
+                var logicalBooster = pair.Key;
+                var pictureBoxView = pair.Value;
+
+                if (!engine.Boosters.Contains(logicalBooster))
+                {
+                    this.Controls.Remove(pictureBoxView);
+                    boosterViews.Remove(logicalBooster);
+                }
+            }
+
+            UpdateWindowText();
+
+            if (engine.IsBallLost)
             {
                 RestartGame();
             }
-        }
-
-        private void TryDropBooster(Point dropLocation)
-        {
-            if (randomizer.Next(1, GameSettings.RandomRangeMax) <= GameSettings.BoosterChance)
-            {
-                PictureBox booster = new()
-                {
-                    Size = GameSettings.BoosterSize,
-                    Location = dropLocation,
-                    BackColor = Color.Pink,
-                    BorderStyle = BorderStyle.Fixed3D
-                };
-                this.Controls.Add(booster);
-                boosters.Add(booster);
-            }
-        }
-
-        private void ProcessFallingBoosters()
-        {
-            for (int boosterIndex = boosters.Count - 1; boosterIndex >= 0; boosterIndex--)
-            {
-                boosters[boosterIndex].Top += GameSettings.BoosterSpeed;
-
-                if (boosters[boosterIndex].Bounds.IntersectsWith(pbPaddle.Bounds))
-                {
-                    if (engine.BallDamage < GameSettings.MaxBallDamage)
-                    {
-                        engine.BallDamage++;
-                        UpdateWindowText();
-                    }
-                    RemoveBooster(boosterIndex);
-                }
-                else if (boosters[boosterIndex].Top > this.ClientSize.Height)
-                {
-                    RemoveBooster(boosterIndex);
-                }
-            }
-        }
-
-        private void RemoveBooster(int indexToRemove)
-        {
-            this.Controls.Remove(boosters[indexToRemove]);
-            boosters.RemoveAt(indexToRemove);
         }
 
         private void RestartGame()
@@ -174,20 +144,9 @@ namespace ArkanoidGame
             gameTimer.Stop();
             MessageBox.Show("Мяч упал! Начинаем заново.");
 
-            foreach (var block in blocks) this.Controls.Remove(block);
-            foreach (var booster in boosters) this.Controls.Remove(booster);
+            engine.ResetLevel();
+            SyncUIWithEngine();
 
-            blocks.Clear();
-            boosters.Clear();
-
-            engine.BallDamage = GameSettings.InitialBallDamage;
-            engine.BallSpeedX = GameSettings.InitialSpeedX;
-            engine.BallSpeedY = GameSettings.InitialSpeedY;
-
-            pbBall.Location = new Point(this.ClientSize.Width / 2, this.ClientSize.Height / 2);
-
-            GenerateBlocks();
-            UpdateWindowText();
             gameTimer.Start();
         }
     }
