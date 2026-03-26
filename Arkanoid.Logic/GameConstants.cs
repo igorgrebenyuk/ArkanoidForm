@@ -1,6 +1,4 @@
-﻿using System.Drawing;
-
-namespace ArkanoidGame
+﻿namespace ArkanoidGame
 {
     /// <summary>
     /// Константы игровой логики, скоростей и параметров баланса.

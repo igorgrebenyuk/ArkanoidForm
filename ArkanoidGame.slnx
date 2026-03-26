@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="Arkanoid.Logic/Arkanoid.Logic.csproj" Id="0c8da28e-fb63-450a-b1c2-ae1fd95885f6" />
   <Project Path="ArkanoidGame/ArkanoidGame.csproj" />
 </Solution>
