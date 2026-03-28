@@ -1,11 +1,11 @@
+using Arkanoid.Logic;
 
-
-namespace ArkanoidGame
+namespace Arkanoid.UI
 {
     /// <summary>
     /// Окно игры. Отвечает ТОЛЬКО за отрисовку (UI) и перехват ввода.
     /// </summary>
-    public partial class GameForm : Form
+    public partial class GameForm 
     {
         private readonly GameEngine engine;
         private readonly Dictionary<Block, PictureBox> blockViews;
@@ -19,13 +19,13 @@ namespace ArkanoidGame
             blockViews = new Dictionary<Block, PictureBox>();
             boosterViews = new Dictionary<Booster, PictureBox>();
 
-            SyncUIWithEngine();
+            SyncUiWithEngine();
 
             gameTimer.Tick += GameTimer_Tick;
             this.MouseMove += GameForm_MouseMove;
         }
 
-        private void SyncUIWithEngine()
+        private void SyncUiWithEngine()
         {
             foreach (var blockPictureBox in blockViews.Values)
             {
@@ -68,13 +68,13 @@ namespace ArkanoidGame
             this.Text = $"Arkanoid | Урон мяча: {engine.BallDamage}";
         }
 
-        private void GameForm_MouseMove(object _, MouseEventArgs mouseEvent)
+        private void GameForm_MouseMove(object? _, MouseEventArgs mouseEvent)
         {
             engine.MovePaddle(mouseEvent.X, this.ClientRectangle.Width);
             pbPaddle.Location = engine.Paddle.Location; 
         }
 
-        private void GameTimer_Tick(object _, EventArgs __)
+        private void GameTimer_Tick(object? _, EventArgs __)
         {
             engine.UpdatePhysics(this.ClientRectangle.Width, this.ClientRectangle.Height);
 
@@ -142,7 +142,7 @@ namespace ArkanoidGame
             MessageBox.Show("Мяч упал! Начинаем заново.");
 
             engine.ResetLevel();
-            SyncUIWithEngine();
+            SyncUiWithEngine();
 
             gameTimer.Start();
         }

@@ -1,6 +1,4 @@
-﻿using System.Windows.Forms;
-
-namespace ArkanoidGame
+﻿namespace Arkanoid.UI
 {
     /// <summary>
     /// Константы пользовательского интерфейса и визуальных элементов.

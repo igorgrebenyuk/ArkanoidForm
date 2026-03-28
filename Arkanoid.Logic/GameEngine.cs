@@ -1,18 +1,7 @@
 ﻿using System.Drawing;
 
-namespace ArkanoidGame
+namespace Arkanoid.Logic
 {
-    public class Block
-    {
-        public Rectangle Bounds { get; set; }
-        public int Health { get; set; }
-    }
-
-    public class Booster
-    {
-        public Rectangle Bounds { get; set; }
-    }
-
     /// <summary>
     /// Логический движок игры. Отвечает за расчеты перемещений и состояние игровых объектов.
     /// </summary>
@@ -20,14 +9,28 @@ namespace ArkanoidGame
     {
         private readonly Random randomizer;
 
+        /// <summary> Текущие координаты и размер мяча. </summary>
         public Rectangle Ball { get; private set; }
+
+        /// <summary> Текущие координаты и размер ракетки. </summary>
         public Rectangle Paddle { get; private set; }
+
+        /// <summary> Список активных блоков на поле. </summary>
         public List<Block> Blocks { get; private set; }
+
+        /// <summary> Список падающих бонусов. </summary>
         public List<Booster> Boosters { get; private set; }
 
+        /// <summary> Текущая скорость мяча по горизонтали. </summary>
         public int BallSpeedX { get; private set; } = GameConstants.InitialSpeedX;
+
+        /// <summary> Текущая скорость мяча по вертикали. </summary>
         public int BallSpeedY { get; private set; } = GameConstants.InitialSpeedY;
+
+        /// <summary> Текущий урон, наносимый мячом. </summary>
         public int BallDamage { get; private set; } = GameConstants.InitialBallDamage;
+
+        /// <summary> Состояние игры: потерян ли мяч. </summary>
         public bool IsBallLost { get; private set; }
 
         public GameEngine()
@@ -38,6 +41,9 @@ namespace ArkanoidGame
             ResetLevel();
         }
 
+        /// <summary>
+        /// Сбрасывает состояние уровня к начальным настройкам.
+        /// </summary>
         public void ResetLevel()
         {
             Blocks.Clear();
@@ -48,8 +54,17 @@ namespace ArkanoidGame
             BallSpeedX = GameConstants.InitialSpeedX;
             BallSpeedY = GameConstants.InitialSpeedY;
 
-            Ball = new Rectangle(390, 400, 20, 20);
-            Paddle = new Rectangle(325, 540, 150, 20); 
+            Ball = new Rectangle(
+                GameConstants.InitialBallX,
+                GameConstants.InitialBallY,
+                GameConstants.BallSize,
+                GameConstants.BallSize);
+
+            Paddle = new Rectangle(
+                GameConstants.InitialPaddleX,
+                GameConstants.InitialPaddleY,
+                GameConstants.InitialPaddleWidth,
+                GameConstants.InitialPaddleHeight);
 
             for (var rowNumber = 0; rowNumber < GameConstants.Rows; rowNumber++)
             {
@@ -65,40 +80,31 @@ namespace ArkanoidGame
             }
         }
 
+        /// <summary>
+        /// Обрабатывает перемещение ракетки за курсором мыши.
+        /// </summary>
         public void MovePaddle(int mouseX, int clientWidth)
         {
             var newPositionX = mouseX - Paddle.Width / 2;
 
-            if (newPositionX < 0)
-            {
-                newPositionX = 0;
-            }
-            if (newPositionX > clientWidth - Paddle.Width)
-            {
-                newPositionX = clientWidth - Paddle.Width;
-            }
+            if (newPositionX < 0) newPositionX = 0;
+            if (newPositionX > clientWidth - Paddle.Width) newPositionX = clientWidth - Paddle.Width;
 
             Paddle = new Rectangle(newPositionX, Paddle.Y, Paddle.Width, Paddle.Height);
         }
 
+        /// <summary>
+        /// Основной цикл физики: движение мяча, отскоки, столкновения и выпадение бонусов.
+        /// </summary>
         public void UpdatePhysics(int clientWidth, int clientHeight)
         {
-            if (IsBallLost)
-            {
-                return;
-            }
+            if (IsBallLost) return;
 
             var nextPositionX = Ball.X + BallSpeedX;
             var nextPositionY = Ball.Y + BallSpeedY;
 
-            if (nextPositionX <= 0 || nextPositionX + Ball.Width >= clientWidth)
-            {
-                BallSpeedX *= -1;
-            }
-            if (nextPositionY <= 0)
-            {
-                BallSpeedY *= -1;
-            }
+            if (nextPositionX <= 0 || nextPositionX + Ball.Width >= clientWidth) BallSpeedX *= -1;
+            if (nextPositionY <= 0) BallSpeedY *= -1;
 
             if (nextPositionY > clientHeight)
             {
@@ -147,28 +153,22 @@ namespace ArkanoidGame
             }
         }
 
-        public void BounceY()
+        private void BounceY() => BallSpeedY *= -1;
+
+        private void IncreaseDamage()
         {
-            BallSpeedY *= -1;
+            if (BallDamage < GameConstants.MaxBallDamage) BallDamage++;
         }
 
-        public void IncreaseDamage()
-        {
-            if (BallDamage < GameConstants.MaxBallDamage)
-            {
-                BallDamage++;
-            }
-        }
         private void TryDropBooster(Point dropLocation)
         {
             if (randomizer.Next(GameConstants.RandomRangeMin, GameConstants.RandomRangeMax) <= GameConstants.BoosterChance)
             {
                 Boosters.Add(new Booster
                 {
-                    Bounds = new Rectangle(dropLocation.X, dropLocation.Y, 20, 20)
+                    Bounds = new Rectangle(dropLocation.X, dropLocation.Y, GameConstants.BoosterSize, GameConstants.BoosterSize)
                 });
             }
         }
     }
-
 }

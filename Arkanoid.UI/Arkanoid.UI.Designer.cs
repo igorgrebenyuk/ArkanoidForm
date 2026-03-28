@@ -1,4 +1,4 @@
-﻿namespace ArkanoidGame
+﻿namespace Arkanoid.UI
 {
     partial class GameForm : Form
     {

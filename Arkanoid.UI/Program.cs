@@ -1,4 +1,4 @@
-namespace ArkanoidGame
+namespace Arkanoid.UI
 {
     internal static class Program
     {
