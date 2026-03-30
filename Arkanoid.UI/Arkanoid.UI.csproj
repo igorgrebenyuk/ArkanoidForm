@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>ArkanoidGame</RootNamespace>
+    <RootNamespace>Arkanoid.UI</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

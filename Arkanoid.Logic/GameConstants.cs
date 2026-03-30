@@ -50,7 +50,6 @@
         /// <summary> Делитель для расчета угла отскока от ракетки. </summary>
         public const int PaddleHitDivisor = 15;
 
-        // --- Добавленные описания для новых констант ---
         /// <summary> Начальная позиция мяча по оси X. </summary>
         public const int InitialBallX = 390;
         /// <summary> Начальная позиция мяча по оси Y. </summary>

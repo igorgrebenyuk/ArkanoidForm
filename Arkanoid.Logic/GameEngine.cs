@@ -33,7 +33,10 @@ namespace Arkanoid.Logic
         /// <summary> Состояние игры: потерян ли мяч. </summary>
         public bool IsBallLost { get; private set; }
 
-        public GameEngine()
+     /// <summary>
+     /// Инициализирует новый экземпляр движка игры, подготавливает списки объектов и устанавливает начальное состояние уровня.
+     /// </summary>
+    public GameEngine()
         {
             randomizer = new Random();
             Blocks = new List<Block>();
@@ -87,8 +90,14 @@ namespace Arkanoid.Logic
         {
             var newPositionX = mouseX - Paddle.Width / 2;
 
-            if (newPositionX < 0) newPositionX = 0;
-            if (newPositionX > clientWidth - Paddle.Width) newPositionX = clientWidth - Paddle.Width;
+            if (newPositionX < 0)
+            { 
+                newPositionX = 0; 
+            }
+            if (newPositionX > clientWidth - Paddle.Width) 
+            { 
+                newPositionX = clientWidth - Paddle.Width; 
+            }
 
             Paddle = new Rectangle(newPositionX, Paddle.Y, Paddle.Width, Paddle.Height);
         }
@@ -98,13 +107,22 @@ namespace Arkanoid.Logic
         /// </summary>
         public void UpdatePhysics(int clientWidth, int clientHeight)
         {
-            if (IsBallLost) return;
+            if (IsBallLost) 
+            {
+                return; 
+            }
 
             var nextPositionX = Ball.X + BallSpeedX;
             var nextPositionY = Ball.Y + BallSpeedY;
 
-            if (nextPositionX <= 0 || nextPositionX + Ball.Width >= clientWidth) BallSpeedX *= -1;
-            if (nextPositionY <= 0) BallSpeedY *= -1;
+            if (nextPositionX <= 0 || nextPositionX + Ball.Width >= clientWidth) 
+            {
+                BallSpeedX *= -1;
+             }
+            if (nextPositionY <= 0)
+            { 
+                BallSpeedY *= -1;
+            }
 
             if (nextPositionY > clientHeight)
             {
@@ -157,7 +175,10 @@ namespace Arkanoid.Logic
 
         private void IncreaseDamage()
         {
-            if (BallDamage < GameConstants.MaxBallDamage) BallDamage++;
+            if (BallDamage < GameConstants.MaxBallDamage) 
+            { 
+                BallDamage++; 
+            }
         }
 
         private void TryDropBooster(Point dropLocation)
